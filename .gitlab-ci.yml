@@ -1,0 +1,25 @@
+image: alpine:latest
+
+before_script:
+  # Ubuntu
+  # - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+  # Linux Alpine
+  - "which ssh-agent || ( apk update && apk add openssh )"
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan -H "$BACKEND_IP" > ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+
+stages:
+  - deploy
+
+ssh_deploy:
+  stage: deploy
+  script:
+    - ssh ${BACKEND_USER}@${BACKEND_IP} "pm2 stop $BACKEND_PM2_APP_NAME && (test -d $BACKEND_DEPLOY_DIR || git clone $CI_REPOSITORY_URL $BACKEND_DEPLOY_DIR) && cd $BACKEND_DEPLOY_DIR && git fetch --all && git reset --hard origin/master"
+    - ssh ${BACKEND_USER}@${BACKEND_IP} "cd $BACKEND_DEPLOY_DIR && echo MONGO_ATLAS_PW=${MONGO_ATLAS_PW} > .env && echo JWT_KEY=${JWT_KEY} >> .env"
+    - ssh ${BACKEND_USER}@${BACKEND_IP} "cd $BACKEND_DEPLOY_DIR && npm i && pm2 start server.js --name $BACKEND_PM2_APP_NAME"
+  only:
+    - master
