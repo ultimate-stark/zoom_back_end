@@ -1,6 +1,6 @@
 const Book = require("../models/book.model");
 var AdmZip = require('adm-zip');
-var unzipper = require('unzipper');
+// var unzipper = require('unzipper');
 var XLSX = require('xlsx');
 var path = require('path');
 const multer = require("multer");
@@ -17,6 +17,7 @@ const s3 = new S3({
   accessKeyId,
   secretAccessKey
 });
+
 
 exports.createBooks = (req, res, next) => {
   var workbook = XLSX.readFile(req.file.path);
@@ -41,36 +42,43 @@ exports.createBooks = (req, res, next) => {
           books[i].reviewers.push({ name: col.reviewer })
           books[i].category.push({ title: col.category })
           books[i].subCategory.push({ title: col.subCategory })
-          books[i].file.push({ link: col.file , name: col.fileName.split('.')[0] + '.' + 'pdf' })
-          books[i].file.push({ link: 'https://zoom-books.s3.us-west-1.wasabisys.com/' + col.fileName })
-          request({ url: col.file, encoding: null }, function (err, res, contents) {
-            // var fileName;
-            // fs.writeFile(path.join(__dirname, `../images/${col.fileName}`), contents, function () {
+          if (col.fileName) {
+            books[i].file.push({ link: col.file, name: col.fileName.split('.')[0] + '.' + 'pdf' })
+            books[i].file.push({ link: 'https://zoom-books.s3.us-west-1.wasabisys.com/' + col.fileName })
+          }
 
-              // var zip = new AdmZip(path.join(__dirname, `../images/${col.fileName}`));
-              // var zipEntries = zip.getEntries(); 
+          if (col.file) {
+            request({ url: col.file, encoding: null }, function (err, res, contents) {
+              var fileName;
+              fs.writeFile(path.join(__dirname, `../images/${col.fileName}`), contents, function () {
 
-              // zipEntries.forEach(function (zipEntry) {
-              //   fileName = zipEntry.entryName;
-              // });
+                var zip = new AdmZip(path.join(__dirname, `../images/${col.fileName}`));
+                var zipEntries = zip.getEntries();
 
-              // var zip = new AdmZip(path.join(__dirname, `../images/${col.fileName}`));
-              
-              // zip.extractAllTo(path.join(__dirname, `../images`) , true);
-              
-              // var extension = fileName.split('.')[col.fileName.split('.').length - 1]
-              
-              // var newFileName = col.fileName.split('.')[0] + '.' + extension
+                zipEntries.forEach(function (zipEntry) {
+                  fileName = zipEntry.entryName;
+                });
 
-              // fs.renameSync(path.join(__dirname, `../images/${fileName}`) , path.join(__dirname, `../images/${newFileName}`) )
+                var zip = new AdmZip(path.join(__dirname, `../images/${col.fileName}`));
 
-            // })
-            s3.putObject({
-              Body: contents,
-              Bucket: "zoom-books",
-              Key: col.fileName
+                zip.extractAllTo(path.join(__dirname, `../images`), true);
+
+                var extension = fileName.split('.')[col.fileName.split('.').length - 1]
+
+                var newFileName = col.fileName.split('.')[0] + '.' + extension
+
+                fs.renameSync(path.join(__dirname, `../images/${fileName}`), path.join(__dirname, `../images/${newFileName}`))
+
+                s3.putObject({
+                  Body: contents,
+                  Bucket: "zoom-books",
+                  Key: col.fileName
+                }).promise();
+
+              })
+
             });
-          });
+          }
         })
       }
       else if (element === 'sounds') {
