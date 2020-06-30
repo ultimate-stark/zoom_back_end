@@ -1,46 +1,54 @@
 const Logo = require("../models/logo.model");
 
-exports.createLogo = (req,res,next) => {
-    console.log(req.files,"1")
-
-  
-
-  
-    var logo = new Logo ({
-        image:req.files[0].filename,
-      
-    });
-  
-
-  
-    logo.save().then(createdBook => {
-      console.log(createdBook)
-      res.status(201).json({
-        message:"book Added Successfully"
+exports.createLogo = (req, res, next) => {
+  Logo.find().then(logos => {
+    if(logos.length) {
+      Logo.findOne().then(logo => {
+        logo.url = req.files[0].filename
+        logo.save().then(createdBook => {
+          res.status(201).json({
+            message: "تم تغير صورة الموقع بنجاح"
+          })
+        }).catch(error => {
+          res.status(500).json({
+            message: "Creating a book failed"
+          })
+        })
       })
-    })
-    .catch(error =>{
-      res.status(500).json({
-        message:"Creating a book failed"
+    }
+    else {
+      var newLogo = new Logo({
+        url: req.files[0].filename,
+      });
+      newLogo.save().then(createdBook => {
+        res.status(201).json({
+          message: "تم تغير صورة الموقع بنجاح"
+        })
+      }).catch(error => {
+        res.status(500).json({
+          message: "Creating a book failed"
+        })
       })
-    })
-  }
+    }
+  })
+}
 
 
-  exports.getLogo = (req,res,next) => {
-    Logo.find().then(image => {
-        console.log(image)
+exports.getLogo = (req, res, next) => {
+  Logo.find().then(logo => {
+    if(logo.length){
       res.status(200).json({
-        message: "image Fetched Successfully!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
-        image:image
+        logo: logo[0].url
       })
-    }).catch(error => {
-      res.status(500).json({
-        message: "Fetching books Failed"
+    }
+    else {
+      res.status(200).json({
+        message: 'no logos'
       })
-    })
-  }
-  
+    }
+  })
+}
+
 
 // Logo.updateOne({ _id: req.params.id}, book)
 // .then(result => {

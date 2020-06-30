@@ -1,48 +1,29 @@
 const mongoose = require("mongoose");
-const mongoosastic = require('mongoosastic');
+let softDelete = require('mongoosejs-soft-delete');
 
 const bookSchema = mongoose.Schema({
   type: { type: String, required: true },
-  title: { type: String},
-
-
-  author: { type: String, required: true },
-  reviewer: {type: String},
-  publishers: { type: String},
-
-
+  title: { type: String, required: true },
+  authors: { type: Array, required: true },
+  reviewers: {type: Array},
+  publishers: { type: Array},
   publicationDate: { type: String },
-  publicationCountry: { type: String},
-  publicationCity: { type: String},
-  edition: { type: String},
+  publicationCountry: { type: String },
+  publicationCity: { type: String },
+  edition: { type: String },
   parts: { type: String },
-  papers: { type: String},
-
-  
-  file:{ type:String , required:true},
-
-  
-  category:{ type: String, required: true },
-  subCategory:{ type: String },
+  papers: { type: String} ,  
+  file:{ type: Array, required: true },  
+  category:{ type: Array , required: true },
+  subCategory:{ type: Array },
   subject:{ type: String },
-  comments:{ type: String},
-  coverImage:{ type: String, required: true},
-  sound:{ type:Array , required:true ,es_indexed:false}
+  comments:{ type: String },
+  coverImage:{ type: Array },
+  sound:{ type: Array , es_indexed: false }
 });
 
 
-// bookSchema.plugin(mongoosastic,{  
-//   host:"http://172.105.86.151/9900",
-//   port: 9900,
-//   protocol: "http",
-//   auth: "cicd-man:72885HAEarrBadmQBWx3waYxn"
-
-// });
-
-// bookSchema.plugin(mongoosastic,{  
-//   "host":"172.105.86.151",
-//   "port": 9900
-// });
+bookSchema.plugin(softDelete);
 
 module.exports = mongoose.model("Book", bookSchema);
 
