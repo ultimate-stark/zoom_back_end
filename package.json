@@ -25,7 +25,7 @@
     "request": "^2.88.2",
     "unzipper": "^0.10.11",
     "xls-to-json-lc": "^0.3.4",
-    "xlsx": "^0.16.0",
+    "xlsx": "^0.17.0",
     "xlsx-to-json-lc": "^0.5.0",
     "zip-to-s3": "^0.1.0"
   }
